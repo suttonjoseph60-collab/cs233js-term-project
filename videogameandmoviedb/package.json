@@ -1,0 +1,26 @@
+{
+  "name": "videogameandmoviedb",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/suttonjoseph60-collab/cs233js-term-project#readme",
+  "bugs": {
+    "url": "https://github.com/suttonjoseph60-collab/cs233js-term-project/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/suttonjoseph60-collab/cs233js-term-project.git"
+  },
+  "license": "ISC",
+  "author": "Joseph Sutton",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^8.0.14"
+  }
+}
