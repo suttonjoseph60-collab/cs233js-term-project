@@ -54,7 +54,7 @@ async function doSearch(query) {
     }
 }
 
-function saveGameToLibrary(gameString) {
+function saveGameToLibrary(gameString) {    
     const game = JSON.parse(decodeURIComponent(gameString));
     let library = JSON.parse(localStorage.getItem('myGameLibrary')) || [];
     
@@ -68,6 +68,8 @@ function saveGameToLibrary(gameString) {
     localStorage.setItem('myGameLibrary', JSON.stringify(library));
     console.log(`Added ${game.name} to your library!`);
     console.log(game);
+    resultsEl.innerHTML = '';
+    input.value = '';
     renderLibrary();
 }
 
