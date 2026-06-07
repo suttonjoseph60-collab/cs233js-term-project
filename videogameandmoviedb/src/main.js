@@ -1,7 +1,15 @@
-// need to update gamecard with .json object data
-// need to implement add/remove games via local storage for game library objects. 
-// need to update DOM to display library objects as opposed to hard coded example cards. 
+// Joseph Sutton 
+// 6/6/2026
+// cs233js term project "Game Database"
 
+// TODO: comment out all the code 
+// TODO: add attribution for rawg io API 
+// TODO: use npm package? 
+// TODO: separate io into individual module
+// TODO: use classes
+// TODO: unit tests?
+// TODO: check input validation and implement where needed
+// TODO: add fields for each game object to include a user status such as "Playing, Completed, want to play"
 
 
 import { searchGames, fetchAverageRating } from './api.js';

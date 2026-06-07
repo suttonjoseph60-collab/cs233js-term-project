@@ -1,3 +1,7 @@
+// Joseph Sutton 
+// 6/6/2026
+// cs233js term project "Game Database"
+
 import { API_KEY } from './config.js';
 
 export async function searchGames(query, pageSize = 6) {
