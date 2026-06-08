@@ -2,25 +2,24 @@
 // 6/6/2026
 // cs233js term project "Game Database"
 
-import { API_KEY } from './config.js';
+import { RAWG_API_KEY, SEARCH_PAGE_SIZE } from './config.js';
 
-export async function searchGames(query, pageSize = 6) {
-    const url = `https://api.rawg.io/api/games?key=${API_KEY}&search=${encodeURIComponent(query)}&page_size=${pageSize}`; // Add page_size to limit results for better performance
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Network error while searching games');
-    const data = await res.json();
-    console.log('Search results:', data);
-    return data; // contains results, next, etc.
+const API_BASE_URL = 'https://api.rawg.io/api';
+
+// chat helper to build API URLs with query parameters. automatically includes API key and handles encoding.
+function buildUrl(path, params = {}) {
+  const query = new URLSearchParams({ key: RAWG_API_KEY, ...params });
+  return `${API_BASE_URL}/${path}?${query}`;
 }
 
-// TODO: integrate this function into the details button click handler in main.js to fetch 
-// and display average rating when user clicks search. Also we can just plug this into the gamecard
-// template to show the average rating right away without needing to click details. 
-export async function fetchAverageRating(gameId) {
-    const url = `https://api.rawg.io/api/games/${gameId}?key=${API_KEY}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Network error while fetching game details');
-    const data = await res.json();
-    console.log('Fetched game details:', data);
-    return data.rating;
+// main api function to search games and get game info. 
+export async function searchGames(query, pageSize = SEARCH_PAGE_SIZE) {
+  const url = buildUrl('games', { search: query, page_size: pageSize });
+  const res = await fetch(url);
+
+  if (!res.ok) {
+    throw new Error('Network error while searching games.');
+  }
+
+  return res.json();
 }

@@ -2,130 +2,252 @@
 // 6/6/2026
 // cs233js term project "Game Database"
 
-// TODO: comment out all the code 
-// TODO: add attribution for rawg io API 
-// TODO: use npm package? 
-// TODO: separate io into individual module
-// TODO: use classes
-// TODO: unit tests?
-// TODO: check input validation and implement where needed
-// TODO: add fields for each game object to include a user status such as "Playing, Completed, want to play"
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import './styles.css';
 
+import { searchGames } from './api.js';
+import { Game } from './game.js';
 
-import { searchGames, fetchAverageRating } from './api.js';
+const STORAGE_KEY = 'myGameLibrary';
+const DEFAULT_STATUS = 'Want to Play';
 
-const input = document.getElementById('global-search-input');
-const button = document.getElementById('global-search-button');
-const resultsEl = document.getElementById('search-results');
+const dom = {
+  searchInput: document.getElementById('global-search-input'),
+  searchButton: document.getElementById('global-search-button'),
+  resultsContainer: document.getElementById('search-results'),
+  libraryGrid: document.querySelector('.grid'),
+};
 
-function createGameCard(game) {
-    const div = document.createElement('div');
-    div.className = 'result-card';
-    const gameString = encodeURIComponent(JSON.stringify(game));
-    div.innerHTML = `
-        <img src="${game.background_image || ''}" alt="${game.name}" class="result-img">
-        <div class="result-body">
-            <h3 class="result-title">${game.name}</h3>
-            <p class="result-meta">${game.released || ''} • Rating: ${game.rating}</p>
-            <p class="result-platforms">${(game.parent_platforms || []).map(p => p.platform.name).join(', ')}</p>
-            <button class="details-btn" data-id="${game.id}">Details</button>
-            <button class="add-to-lib-btn" data-id="${game.id}" data-game="${gameString}">Add to Library</button>
+const activeSearchGames = new Map();
+
+// get selected status filter value. defaults to "all" if none selected.
+function getSelectedStatusFilter() {
+  const selected = document.querySelector('input[name="status-filter"]:checked');
+  return selected ? selected.value : 'all';
+}
+
+// format platforms array into a readable string. e.g. ["PC", "PlayStation"] -> "PC, PlayStation". handles empty/null case.
+function formatPlatforms(platforms) {
+  if (!platforms || platforms.length === 0) {
+    return 'Unknown platform';
+  }
+  return platforms.join(', ');
+}
+
+// search result card template. 
+function createSearchCard(game) {
+  const card = document.createElement('div');
+  card.className = 'col';
+
+  const imageUrl = game.background_image || 'https://via.placeholder.com/640x360?text=No+Image';
+
+  card.innerHTML = `
+    <div class="card h-100 shadow-sm bg-dark text-white border-secondary">
+      <img src="${imageUrl}" class="card-img-top" alt="${game.name}" loading="lazy">
+      <div class="card-body d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <h5 class="card-title mb-0">${game.name}</h5>
+          <span class="badge bg-primary">${game.rating ?? 'N/A'}</span>
         </div>
-    `;
-    return div;
+        <p class="card-text text-muted mb-1">${game.released || 'Release date unknown'}</p>
+        <p class="card-text text-muted small mb-3">${formatPlatforms((game.parent_platforms || []).map(p => p.platform.name))}</p>
+        <button class="btn btn-outline-primary mt-auto" type="button" data-action="add" data-game-id="${game.id}">
+          Add to Library
+        </button>
+      </div>
+    </div>
+  `;
+
+  return card;
 }
 
-function renderResults(games) {
-    resultsEl.innerHTML = '';
-    if (!games || games.length === 0) {
-        resultsEl.textContent = 'No results found';
-        return;
-    }
-    const grid = document.createElement('div');
-    grid.className = 'results-grid';
-    games.forEach(g => grid.appendChild(createGameCard(g)));
-    resultsEl.appendChild(grid);
+// render search results grid. also store the active search results in a map for easy lookup when adding to library.
+function renderSearchResults(games) {
+  dom.resultsContainer.innerHTML = '';
+  activeSearchGames.clear();
+
+  if (!games || games.length === 0) {
+    dom.resultsContainer.textContent = 'No results found. Try another search term.';
+    return;
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4 results-grid';
+
+  games.forEach(game => {
+    activeSearchGames.set(String(game.id), game);
+    grid.appendChild(createSearchCard(game));
+  });
+
+  dom.resultsContainer.appendChild(grid);
 }
 
-async function doSearch(query) {
-    if (!query || !query.trim()) {
-        resultsEl.textContent = 'Please enter a search term';
-        return;
-    }
-    resultsEl.textContent = 'Searching...';
-    try {
-        const data = await searchGames(query);
-        renderResults(data.results || []);
-    } catch (err) {
-        console.error(err);
-        resultsEl.textContent = 'An error occurred while searching';
-    }
+// perform search and handle results/errors. also validate input to prevent empty searches.
+async function performSearch(query) {
+  if (!query || !query.trim()) {
+    dom.resultsContainer.textContent = 'Please enter a search term.';
+    return;
+  }
+
+  dom.resultsContainer.textContent = 'Searching...';
+
+  try {
+    const data = await searchGames(query.trim());
+    renderSearchResults(data.results || []);
+  } catch (error) {
+    console.error('Search failed:', error);
+    dom.resultsContainer.textContent = 'Search failed. Please try again later.';
+  }
 }
 
-function saveGameToLibrary(gameString) {    
-    const game = JSON.parse(decodeURIComponent(gameString));
-    let library = JSON.parse(localStorage.getItem('myGameLibrary')) || [];
-    
-    // Check for duplicates
-    if (library.some(savedGame => savedGame.id === game.id)) {
-        alert(`${game.name} is already in your library!`);
-        return;
-    }
-
-    library.push(game);
-    localStorage.setItem('myGameLibrary', JSON.stringify(library));
-    console.log(`Added ${game.name} to your library!`);
-    console.log(game);
-    resultsEl.innerHTML = '';
-    input.value = '';
-    renderLibrary();
+// load games from local storage. if no library exists yet, return an empty array.
+function loadLibrary() {
+  return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 }
 
+function saveLibrary(library) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(library));
+}
+
+// save game to local. Also checks if game is already in libary to prevent duplicate. 
+function addGameToLibrary(gameId) {
+  const gameData = activeSearchGames.get(String(gameId));
+  if (!gameData) {
+    return;
+  }
+
+  const library = loadLibrary();
+  if (library.some(item => String(item.id) === String(gameId))) {
+    window.alert(`${gameData.name} is already in your library.`);
+    return;
+  }
+
+  const savedGame = Game.fromRawgApi(gameData);
+  library.push(savedGame);
+  saveLibrary(library);
+  renderLibrary();
+  dom.searchInput.value = '';
+  dom.resultsContainer.innerHTML = '';
+}
+
+// Game library card template. 
 function createLibraryCard(game) {
-    const div = document.createElement('div');
-    div.className = 'card';
-    const platforms = (game.parent_platforms || []).map(p => p.platform.name).slice(0, 3);
-    div.innerHTML = `
-        <div class="card-img-placeholder">
-            ${game.background_image ? `<img src="${game.background_image}" alt="${game.name}" style="width: 100%; height: 100%; object-fit: cover;">` : '[Poster Image]'}
-            <span class="badge">${game.rating || 'N/A'}</span>
+  const card = document.createElement('div');
+  card.className = 'col';
+
+  const imageUrl = game.coverUrl || 'https://via.placeholder.com/640x360?text=No+Image';
+
+  card.innerHTML = `
+    <div class="card h-100 shadow-sm bg-dark text-white border-secondary">
+      <img src="${imageUrl}" class="card-img-top" alt="${game.name} cover" loading="lazy">
+      <div class="card-body d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <h5 class="card-title mb-0">${game.name}</h5>
+          <span class="mb-2">${game.rating || 'N/A'}</span>
         </div>
-        <div class="card-content">
-            <div class="card-title">${game.name}</div>
-            <div class="card-meta">
-                <span>${game.released || 'TBA'}</span>
-            </div>
-            <div class="tag-list">
-                ${platforms.map(p => `<span class="tag">${p}</span>`).join('')}
-            </div>
+        <p class="mb-2">${game.released || 'Unknown release'}</p>
+        <div class="mb-3">
+          ${(game.platforms || []).slice(0, 3).map(platform => `<span class="badge bg-secondary me-1">${platform}</span>`).join('')}
         </div>
-    `;
-    return div;
+        <label class="form-label mb-2">Status</label>
+        <select class="form-select status-select" data-id="${game.id}">
+          ${['Want to Play', 'Playing', 'Completed']
+            .map(status => `<option value="${status}"${status === game.status ? ' selected' : ''}>${status}</option>`)
+            .join('')}
+        </select>
+      </div>
+    </div>
+  `;
+
+  return card;
 }
 
+// normalize status value for consistent filtering. e.g. "Want to Play" -> "want-to-play"
+function normalizeStatusValue(status) {
+  return String(status).toLowerCase().replace(/\s+/g, '-');
+}
+
+// render library grid with optional filtering. also handles empty states for no games and no matches.
 function renderLibrary() {
-    const grid = document.querySelector('.grid');
-    const library = JSON.parse(localStorage.getItem('myGameLibrary')) || [];
-    grid.innerHTML = '';
-    if (library.length === 0) {
-        grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">Your library is empty. Search and add games!</p>';
-        return;
-    }
-    library.forEach(game => grid.appendChild(createLibraryCard(game)));
+  const library = loadLibrary();
+  const filter = getSelectedStatusFilter();
+  dom.libraryGrid.innerHTML = '';
+
+  if (!library.length) {
+    dom.libraryGrid.innerHTML = `
+      <div class="empty-state">
+        <p>Your library is empty. Add a game from search to begin tracking your collection.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const filteredGames = library.filter(game => filter === 'all' || normalizeStatusValue(game.status) === filter);
+
+  if (!filteredGames.length) {
+    dom.libraryGrid.innerHTML = `
+      <div class="empty-state">
+        <p>No saved games match the selected filter.</p>
+      </div>
+    `;
+    return;
+  }
+
+  filteredGames.forEach(game => dom.libraryGrid.appendChild(createLibraryCard(game)));
 }
 
-button.addEventListener('click', () => doSearch(input.value));
-input.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSearch(input.value); });
+// update game status in library and re-render. also handles case where game is not found (shouldn't happen but good to check).
+function updateGameStatus(gameId, status) {
+  const library = loadLibrary();
+  const savedGame = library.find(item => String(item.id) === String(gameId));
+  if (!savedGame) return;
 
-resultsEl.addEventListener('click', (e) => {
-    const addBtn = e.target.closest('.add-to-lib-btn');
-    if (addBtn) {
-        const gameString = addBtn.dataset.game;
-        saveGameToLibrary(gameString);
+  savedGame.status = status;
+  saveLibrary(library);
+  renderLibrary();
+}
+
+function handleDocumentClick(event) {
+  const addButton = event.target.closest('[data-action="add"]');
+  if (addButton) {
+    addGameToLibrary(addButton.dataset.gameId);
+  }
+}
+
+// handle status filter changes and status select changes.
+function handleDocumentChange(event) {
+  const statusSelect = event.target.closest('.status-select');
+  if (statusSelect) {
+    updateGameStatus(statusSelect.dataset.id, statusSelect.value);
+    return;
+  }
+
+  if (event.target.matches('input[name="status-filter"]')) {
+    renderLibrary();
+  }
+}
+
+
+function setupEventListeners() {
+  dom.searchButton.addEventListener('click', () => performSearch(dom.searchInput.value));
+  dom.searchInput.addEventListener('keydown', event => {
+    if (event.key === 'Enter') {
+      performSearch(dom.searchInput.value);
     }
-});
+  });
 
-document.addEventListener('DOMContentLoaded', renderLibrary);
+  document.addEventListener('click', handleDocumentClick);
+  document.addEventListener('change', handleDocumentChange);
+}
+
+// initialize app by setting up event listeners and rendering library on page load.
+function initializeApp() {
+  setupEventListeners();
+  renderLibrary();
+}
+
+window.addEventListener('DOMContentLoaded', initializeApp);
 
 
 

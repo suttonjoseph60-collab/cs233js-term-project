@@ -1,105 +1,71 @@
 <!--
-Joseph Sutton 
+Joseph Sutton
 6/6/2026
 cs233js term project "Game Database"
--->>
+-->
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Game Database</title>
-    <link rel="stylesheet" href="src/styles.css">
-    
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Tracker</title>
 </head>
-<body>
+<body class="bg-dark text-light">
+  <header class="navbar navbar-dark bg-dark shadow-sm">
+    <div class="container">
+      <a class="navbar-brand fs-4" href="#">Game Tracker</a>
+      <nav class="nav">
+        <a class="nav-link text-light" href="#search">Search</a>
+        <a class="nav-link text-light" href="#games">Library</a>
+      </nav>
+    </div>
+  </header>
 
-    <!-- Header / Navigation -->
-    <header>
-        <div class="logo">Game Tracker</div>
-        <nav>
-            <a href="#games">Games</a>
-            <a href="#lists">My Playlist</a>
-        </nav>
-    </header>
-
-    <!-- Hero / Global Search -->
-    <section class="hero">
+  <section id="search" class="hero py-5">
+    <div class="container">
+      <div class="text-center mb-4">
         <h1>Discover Games</h1>
-        <p style="color: var(--text-muted)">Track your progress, read data, and manage your collection.</p>
-        <div class="search-container">
-            <input id="global-search-input" type="text" class="search-input" placeholder="Search titles, genres, platforms...">
-            <button id="global-search-button" class="btn">Search</button>
+        <p class="text-muted">Search new titles from RAWG and save games to your personal library.</p>
+      </div>
+
+      <div class="input-group input-group-lg mx-auto" style="max-width: 760px;">
+        <input id="global-search-input" type="text" class="form-control" placeholder="Search titles, platforms, or genres...">
+        <button id="global-search-button" class="btn btn-primary">Search</button>
+      </div>
+
+      <div id="search-results" class="search-results mt-4"></div>
+    </div>
+  </section>
+
+  <main>
+    <section class="library-section py-5">
+      <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
+          <h2 id="games" class="section-title">My Game Library</h2>
+          <div class="btn-group" role="group" aria-label="Filter library">
+            <input type="radio" class="btn-check" name="status-filter" id="filter-all" value="all" autocomplete="off" checked>
+            <label class="btn btn-outline-light" for="filter-all">All</label>
+            <input type="radio" class="btn-check" name="status-filter" id="filter-playing" value="playing" autocomplete="off">
+            <label class="btn btn-outline-light" for="filter-playing">Playing</label>
+            <input type="radio" class="btn-check" name="status-filter" id="filter-completed" value="completed" autocomplete="off">
+            <label class="btn btn-outline-light" for="filter-completed">Completed</label>
+            <input type="radio" class="btn-check" name="status-filter" id="filter-want-to-play" value="want-to-play" autocomplete="off">
+            <label class="btn btn-outline-light" for="filter-want-to-play">Want to Play</label>
+          </div>
         </div>
-        <div id="search-results" class="search-results"></div>
+
+        <div class="grid row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4"></div>
+      </div>
     </section>
+  </main>
 
-    <!-- Main Entry Content -->
-    <main>
-        
-        <!-- Video Games Section -->
-        <h2 id="games" class="section-title">Your Games</h2>
-        <div class="grid">
-            
-            <div class="card">
-                <div class="card-img-placeholder">
-                    [Poster Image]
-                    <span class="badge">9.4</span>
-                </div>
-                <div class="card-content">
-                    <div class="card-title">Elden Ring</div>
-                    <div class="card-meta">
-                        <span>Action RPG</span>
-                        <span>2022</span>
-                    </div>
-                    <div class="tag-list">
-                        <span class="tag">PC</span>
-                        <span class="tag">PS5</span>
-                        <span class="tag">Xbox</span>
-                    </div>
-                </div>
-            </div>
+  <footer class="site-footer py-4">
+    <div class="container text-center text-muted">
+      <p>Search powered by <a class="text-decoration-none text-light" href="https://rawg.io/" target="_blank" rel="noopener noreferrer">RAWG</a>.</p>
+    </div>
+  </footer>
 
-            <div class="card">
-                <div class="card-img-placeholder">
-                    [Poster Image]
-                    <span class="badge">8.9</span>
-                </div>
-                <div class="card-content">
-                    <div class="card-title">Hades II</div>
-                    <div class="card-meta">
-                        <span>Roguemonkey</span>
-                        <span>2024</span>
-                    </div>
-                    <div class="tag-list">
-                        <span class="tag">PC</span>
-                        <span class="tag">Early Access</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-img-placeholder">
-                    [Poster Image]
-                    <span class="badge">9.2</span>
-                </div>
-                <div class="card-content">
-                    <div class="card-title">Cyberpunk 2077</div>
-                    <div class="card-meta">
-                        <span>Sci-Fi RPG</span>
-                        <span>2020</span>
-                    </div>
-                    <div class="tag-list">
-                        <span class="tag">PC</span>
-                        <span class="tag">PS5</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <script type="module" src="src/main.js"></script>
+  <script type="module" src="src/main.js"></script>
 </body>
-
 </html>
